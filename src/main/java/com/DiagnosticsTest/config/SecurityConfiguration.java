@@ -1,46 +1,119 @@
 package com.DiagnosticsTest.config;
-/*
+
+
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
-import com.DiagnosticsTest.entity.User;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
+import org.springframework.security.provisioning.UserDetailsManager;
+
+
+
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfiguration {
+public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
+	@Autowired
+	private DataSource securityDataSource;
+	
+	@Autowired
+	private CustomAuthenticationSuccessHandler successHandler;
+	
+	
+	@Override
+	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+
+		// use jdbc authentication ... oh yeah!!!
+		  auth.jdbcAuthentication().dataSource(securityDataSource)
+		  .usersByUsernameQuery(
+		   "select username,password,enabled from user where username=?")
+		  .authoritiesByUsernameQuery(
+		   "select username, authority from user where username=?")
+		  .passwordEncoder(passwordEncoder()) ;
+		 } 
+	
 	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		http
-			.authorizeHttpRequests((requests) -> requests
-				.requestMatchers("/", "/home").permitAll()
-				.anyRequest().authenticated()
-			)
-			.formLogin((form) -> form
-				.loginPage("/login")
-				.permitAll()
-			)
-			.logout((logout) -> logout.permitAll());
-
-		return http.build();
+	public static PasswordEncoder passwordEncoder(){
+	    return new PasswordEnconderTest();
 	}
 
-	@Bean
-	public UserDetailsService userDetailsService() {
-		UserDetails user =
-			 User.withDefaultPasswordEncoder()
-				.username("user")
-				.password("password")
-				.roles("USER")
-				.build();
 
-		return new InMemoryUserDetailsManager(user);
+
+
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+
+		http.authorizeRequests()
+			.antMatchers("/admin/**").hasRole("ADMIN")
+			.antMatchers("/user/**").hasRole("USER")
+			.antMatchers("/register").permitAll()
+			.antMatchers("/confirm").permitAll()
+			.antMatchers("/login/**").permitAll()
+			.antMatchers("/css/**").permitAll()
+			.antMatchers("/js/**").permitAll()
+			.antMatchers("/static/**").permitAll()
+			.antMatchers("/vendor/**").permitAll()
+			.antMatchers("/resources/**").permitAll()
+			.anyRequest().authenticated()
+			.and()
+			.formLogin()
+			.loginPage("/showMyLoginPage")
+			.loginProcessingUrl("/authenticateTheUser")
+			.defaultSuccessUrl("/register")
+			.permitAll()
+			.successHandler(successHandler)
+		.and()
+		.logout().permitAll()
+		.and()
+		.exceptionHandling().accessDeniedPage("/register");
+		 
 	}
+
+
+	
+	@Override
+	public void configure(WebSecurity web) throws Exception {
+	
+		web.ignoring().antMatchers("/resources/**","/login/**","/static/**","/Script/**","/Style/**","/Icon/**",
+				"/js/**","/vendor/**","/bootstrap/**","/Image/**");
+		
+		//logoutSuccessUrl("/customLogout")
+	}
+	
+
+	@Bean
+	public UserDetailsManager userDetailsManager() {
+		
+		JdbcUserDetailsManager jdbcUserDetailsManager = new JdbcUserDetailsManager();
+		
+		jdbcUserDetailsManager.setDataSource(securityDataSource);
+		
+		return jdbcUserDetailsManager; 
+	}
+		
+	
+	
 }
-*/
+
+class PasswordEnconderTest implements PasswordEncoder {
+    @Override
+    public String encode(CharSequence charSequence) {
+        return charSequence.toString();
+    }
+
+    @Override
+    public boolean matches(CharSequence charSequence, String s) {
+        return charSequence.toString().equals(s);
+    }
+}

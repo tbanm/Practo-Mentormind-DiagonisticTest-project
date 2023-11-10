@@ -1,13 +1,15 @@
 package com.DiagnosticsTest.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
+
+
+import org.springframework.data.annotation.Transient;
 
 
 @Entity
@@ -19,8 +21,6 @@ public class Admin {
 	private int id;
 	
 	@Column(name = "username", nullable = false, unique = true)
-	//@Email(message = "Please provide a valid e-mail")
-	//@NotEmpty(message = "Please provide an e-mail")
 	private String email;
 	
 	@Column(name = "password")
@@ -28,18 +28,33 @@ public class Admin {
 	private String password;
 	
 	@Column(name = "first_name")
-	//@NotEmpty(message = "Please provide your first name")
+	
 	private String firstName;
 	
 	@Column(name = "last_name")
-	//@NotEmpty(message = "Please provide your last name")
 	private String lastName;
 	
+	
+
 	@Column(name = "enabled")
 	private boolean enabled;
 	
 	@Column(name = "confirmation_token")
 	private String confirmationToken;
+
+	public Admin(int id, String email, String password, String firstName, String lastName, boolean enabled,
+			String confirmationToken, String gender, String role) {
+		super();
+		this.id = id;
+		this.email = email;
+		this.password = password;
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.enabled = enabled;
+		this.confirmationToken = confirmationToken;
+		this.gender = gender;
+		this.role = role;
+	}
 
 	@Column(name = "gender")
 	private String gender;
@@ -48,9 +63,9 @@ public class Admin {
 	@Column(name = "authority")
 	private String role;
 	
-	@Column(name = "lastseen")
-	@Transient
-	private String lastseen;
+	
+	
+	
 
 	public int getId() {
 		return id;
@@ -123,23 +138,5 @@ public class Admin {
 	public void setRole(String role) {
 		this.role = role;
 	}
-
-	public String getLastseen() {
-		return lastseen;
-	}
-
-	public void setLastseen(String lastseen) {
-		this.lastseen = lastseen;
-	}
-
-	@Override
-	public String toString() {
-		return "Admin [id=" + id + ", email=" + email + ", password=" + password + ", firstName=" + firstName
-				+ ", lastName=" + lastName + ", enabled=" + enabled + ", confirmationToken=" + confirmationToken
-				+ ", gender=" + gender + ", role=" + role + ", lastseen=" + lastseen + "]";
-	}
-	
-	
-	
 
 }
